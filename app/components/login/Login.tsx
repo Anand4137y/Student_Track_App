@@ -6,6 +6,7 @@ import axios, { AxiosError } from 'axios'
 import toast from 'react-hot-toast'
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/context/AuthContext'
 
 type Inputs = {
     email: string
@@ -20,6 +21,7 @@ function Login() {
     const [loading, setLoading] = useState<boolean>(false);
     const [showStaffLogin, setStaffLogin] = useState<boolean>(true);
     const router = useRouter();
+    const { setUser } = useAuth();
 
     useEffect(() => {
         const token = Cookies.get('token');
@@ -33,8 +35,11 @@ function Login() {
             setLoading(true);
             if (showStaffLogin) {
                 const res = await axios.post(`${config.baseUrl}/api/staff/login`, data);
-                localStorage.setItem('role', res?.data?.data?.role)
-                localStorage.setItem('name', res?.data?.data?.name)
+                const role = res?.data?.data?.role;
+                const name = res?.data?.data?.name;
+                localStorage.setItem('role', role)
+                localStorage.setItem('name', name)
+                setUser({ role, name });
 
                 if (res.data?.token) {
                     Cookies.set('token', res.data.token);
@@ -43,8 +48,12 @@ function Login() {
                 }
             } else {
                 const res = await axios.post(`${config.baseUrl}/api/school/login`, data);
-                localStorage.setItem('role', res?.data?.data?.role)
-                localStorage.setItem('name', res?.data?.data?.schoolName)
+                const role = res?.data?.data?.role;
+                const name = res?.data?.data?.schoolName;
+                localStorage.setItem('role', role)
+                localStorage.setItem('name', name)
+                setUser({ role, name });
+
                 if (res.data?.token) {
                     Cookies.set('token', res.data.token);
                     toast.success('Login successful');

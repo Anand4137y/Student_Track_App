@@ -2,27 +2,22 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { useParams, usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Cookies from 'js-cookie';
+import { useAuth } from '@/context/AuthContext';
 
 export default function Header() {
   const [open, setOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement | null>(null); const pathname = usePathname();
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const pathname = usePathname();
   const router = useRouter();
 
   const hideHeader = ['auth/login', 'auth/signup']
   const shouldHideHeader = hideHeader.some(path => pathname.includes(path))
 
-  // track name on client only (avoid SSR localStorage access)
-  const [name, setName] = useState<string | null>(null);
-  const [role, setRole] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setName(localStorage.getItem('name'));
-      setRole(localStorage.getItem('role'));
-    }
-  }, []);
+  const { user, setUser } = useAuth();
+  const name = user?.name ?? null;
+  const role = user?.role ?? null;
 
   // Generate a nice background color based on the initial
   const getAvatarColor = (letter: any) => {
@@ -52,11 +47,12 @@ export default function Header() {
   }, []);
 
   const handleLogout = async () => {
-    router.push("/auth/login");
-    localStorage.clear();
+    setUser(null);
+    localStorage.removeItem("role");
+    localStorage.removeItem("name");
     Cookies.remove("token");
+    router.push("/auth/login");
   };
-console.log(role)
   return (
     <header className={`w-full bg-white shadow-md px-8 py-4 flex items-center justify-between ${shouldHideHeader ? 'hidden' : ''}`}>
 
